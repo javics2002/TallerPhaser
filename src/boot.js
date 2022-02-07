@@ -23,11 +23,8 @@ export default class Boot extends Phaser.Scene {
 
         //Cargamos las torres
         this.load.setPath('assets/map/');
-        this.load.image('tiles', 'atlas.png');
-        for (let i = 1; i <= 5; i++) {
-            //Tiles desde JSON
-            this.load.tilemapTiledJSON(`torre${i}`, `torre_${i}.json`);
-        }
+        this.load.image('tileset', 'atlas.png');
+        this.load.tilemapTiledJSON('castle', 'castle.json');
 
         // Con setPath podemos establecer el prefijo que se añadirá a todos los load que aparecen a continuación
         this.load.setPath('assets/sprites/');
@@ -105,7 +102,7 @@ export default class Boot extends Phaser.Scene {
      * En cuanto termine la carga, cambiamos a la pantalla de título
      */
     create() {
-        this.scene.start('title');
+        this.scene.start('castle');
     }
 
     loadFont(name, url) {
