@@ -23,7 +23,7 @@ export default class Boot extends Phaser.Scene {
 
         //Cargamos las torres
         this.load.setPath('assets/map/');
-        this.load.image('tileset', 'atlas.png');
+        this.load.image('tileset', 'tileset.png');
         this.load.tilemapTiledJSON('castle', 'castle.json');
 
         // Con setPath podemos establecer el prefijo que se añadirá a todos los load que aparecen a continuación
@@ -31,7 +31,7 @@ export default class Boot extends Phaser.Scene {
 
         //Cargamos todos los sprites
         let sprites = ['rope', 'rope_pivot', 'box', 'exit_icon', 'mute_off', 'mute_on', 
-        'enter_fullscreen', 'exit_fullscreen', 'fragment' ];
+        'enter_fullscreen', 'exit_fullscreen', 'fragment', "title" ];
         sprites.forEach(element => {
             this.load.image(element, `${element}.png`);
         });
@@ -46,10 +46,6 @@ export default class Boot extends Phaser.Scene {
             name: 'scottie_run',
             w: 56,
             h: 55
-        }, {
-            name: 'scottie_climb',
-            w: 38,
-            h: 61
         }, {
             name: 'scottie_push',
             w: 40,
@@ -70,6 +66,10 @@ export default class Boot extends Phaser.Scene {
             name: 'scottie_wall_slide',
             w: 37,
             h: 61
+        }, {
+            name: 'coin',
+            w: 199,
+            h: 170
         }];
         animations.forEach(element => {
             this.load.spritesheet(element.name, `${element.name}.png`, {
@@ -81,7 +81,7 @@ export default class Boot extends Phaser.Scene {
 
         //Cargamos la música
         this.load.setPath('assets/music/');
-        let songs = [];
+        let songs = [ "tower" ];
         songs.forEach(element => {
             this.load.audio(element, `${element}.mp3`);
         });
@@ -92,7 +92,7 @@ export default class Boot extends Phaser.Scene {
         wavSounds.forEach(element => {
             this.load.audio(element, `${element}.wav`);
         });
-        let mp3Sounds = [ 'ladder1', 'ladder2', 'push_box' ];
+        let mp3Sounds = [ 'ladder1', 'ladder2', 'push_box', "coin" ];
         mp3Sounds.forEach(element => {
             this.load.audio(element, `${element}.mp3`);
         });
@@ -102,7 +102,7 @@ export default class Boot extends Phaser.Scene {
      * En cuanto termine la carga, cambiamos a la pantalla de título
      */
     create() {
-        this.scene.start('castle');
+        this.scene.start('title');
     }
 
     loadFont(name, url) {

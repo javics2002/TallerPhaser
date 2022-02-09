@@ -1,6 +1,7 @@
 import Box from './box.js'
 import Rope from './rope.js';
 import Player from './player.js';
+import Coin from './coin.js';
 
 export default class Castle extends Phaser.Scene {
     constructor() {
@@ -10,63 +11,105 @@ export default class Castle extends Phaser.Scene {
     }
 
     preload() {
-        //HACER
         this.loadMusic();
     }
 
     create() {
-        let width = this.cameras.main.width;
-        let height = this.cameras.main.height;
-
         //Tamaño del mapa
-        this.matter.world.setBounds(0, 0, 1280, (this.floors + 1) * this.floorHeight * this.tileSize + 2 * this.margin * this.tileSize);
+        this.matter.world.setBounds(0, 0, 1920, 960);
+        this.tileSize = 32;
 
-        this.buildTower();
+        //Monedas
+        this.monedas = 0; //Monedas que tenemos
+        this.monedasTotales = 0; //Monedas que hay en el mapa
 
         //Animaciones
         this.createAnimations();
 
+        //Construimos el mapa
+        this.construirMapa();
+
         //Personajes
-        this.player = new Player(this, 400, (this.floors + 1) * this.floorHeight * this.tileSize);
+        this.player = new Player(this, 400, 800);
 
         //Camara
-        this.cameras.main.setBounds(0, 0, 1280, (this.floors + 1) * this.floorHeight * 32 + 32 * 4);
+        this.cameras.main.setBounds(0, 0, 1920, 960);
+        this.cameras.main.startFollow(this.player);
 
         //Agarrarse a la cuerda
         this.ropeConstraint = undefined;
         this.onGrabRope();
 
+        //Coger monedas
+        this.colisionConMoneda();
+
         //Música
-        this.music.play(this.key);
+        this.music.play();
         this.music.setRate(1.5);
+        this.music.setVolume(0.5);
         this.music.setMute(this.game.audioConfig.mute);
     }
 
     update(t, dt) {
         super.update(t, dt);
+
+        //Si tenemos todas las monedas, terminamos el juego
+        if (this.monedas === this.monedasTotales){
+            this.music.stop();
+            this.scene.start("end");
+        }
+    }
+
+    cogerMoneda() {
+        this.monedas++;
+    }
+
+    colisionConMoneda() {
+        this.matter.world.on('collisionstart', (event) => {
+            for (let i = 0; i < event.pairs.length; i++) {
+                let bodyA = getRootBody(event.pairs[i].bodyA);
+                let bodyB = getRootBody(event.pairs[i].bodyB);
+
+                const player = bodyA.gameObject instanceof Player ? bodyA : bodyB;
+                const moneda = bodyA.gameObject instanceof Player ? bodyB : bodyA;
+
+                //Si el jugador colisiona con una moneda
+                if (player.gameObject instanceof Player && moneda.gameObject instanceof Coin) {
+                    moneda.gameObject.destruir();
+                }
+            }
+
+            function getRootBody(body) {
+                if (body.parent === body) {
+                    return body;
+                }
+                while (body.parent !== body) {
+                    body = body.parent;
+                }
+                return body;
+            }
+        });
     }
 
     /**
      * Construye la torre a partir del tilemap cargado
      */
-    buildTower() {
+    construirMapa() {
         //Tiles
         const map = this.make.tilemap({
             key: "castle"
         });
 
-        const tileset = map.addTilesetImage("castle", 'tileset');
+        const tileset = map.addTilesetImage("atlas", "tileset");
         const backround = map.createLayer('background', tileset);
         const walls = map.createLayer('tower', tileset);
-        this.coll = map.createLayer('ground', tileset);
+        this.ground = map.createLayer('ground', tileset);
 
         this.createObjects(map);
 
-        this.coll.setCollisionByProperty({
-            collides: true
-        })
+        this.ground.setCollisionBetween(0, 24);
 
-        this.matter.world.convertTilemapLayer(this.coll);
+        this.matter.world.convertTilemapLayer(this.ground);
     }
 
     /**
@@ -92,6 +135,11 @@ export default class Castle extends Phaser.Scene {
         this.createObject(map, 'cuerdas', (objeto) => {
             new Rope(this, objeto.x, objeto.y, objeto.properties[1].value, objeto.properties[0].value);
         });
+
+        this.createObject(map, 'monedas', (objeto) => {
+            new Coin(this, objeto.x, objeto.y);
+            this.monedasTotales++;
+        });
     }
 
     /**
@@ -115,14 +163,12 @@ export default class Castle extends Phaser.Scene {
         //Animaciones de Scottie
         this.createAnimation('scottie_idle', 153);
         this.createAnimation('scottie_run', 16);
-        this.createAnimation('scottie_run_jump', 4);
-        this.createAnimation('scottie_run_jump', 6);
-        this.createAnimation('scottie_climb', 8);
         this.createAnimation('scottie_push', 11);
         this.createAnimation('scottie_jump', 1);
         this.createAnimation('scottie_hang', 1);
         this.createAnimation('scottie_win', 9);
         this.createAnimation('scottie_wall_slide', 1);
+        this.createAnimation('coin', 6, true);
     }
 
     /**
@@ -176,22 +222,73 @@ export default class Castle extends Phaser.Scene {
     }
 
     /**
-   * Carga la música que se usa en las torres.
-   */
-  loadMusic() {
-    //Cargamos la musica
-    /*
-    this.music = this.sound.add('tower', this.game.audioConfig);
-    this.winMusic = this.sound.add('win', this.game.audioConfig);
+     * Carga la música que se usa en las torres.
+     */
+    loadMusic() {
+        //Cargamos la musica
+        this.music = this.sound.add('tower', this.game.audioConfig);
 
-    //Cargamos los sonidos
-    this.help_me = this.sound.add('help_me');
-    this.fall = this.sound.add('fall');
-    this.scream = this.sound.add('scream');
-    this.thump = this.sound.add('thump');
-    this.sounds = [this.help_me, this.fall, this.scream, this.thump];
-    this.sounds.forEach(element => {
-      element.setMute(this.game.audioConfig.mute);
-    });*/
-  }
+        //Cargamos los sonidos
+        this.coinSound = this.sound.add("coin");
+    }
+
+    /**
+     * Evento que se ejecuta cuando Scottie agarra una cuerda.
+     * Crea la constraint necesaria para agarrarlo.
+     */
+    onGrabRope() {
+        this.matter.world.on('collisionstart', (event) => {
+            for (let i = 0; i < event.pairs.length; i++) {
+                let bodyA = getRootBody(event.pairs[i].bodyA);
+                let bodyB = getRootBody(event.pairs[i].bodyB);
+
+                const player = bodyA.gameObject instanceof Player ? bodyA : bodyB;
+                const ropes = bodyA.gameObject instanceof Player ? bodyB : bodyA;
+
+                //Puede que ya estemos agarrados a un nodo
+                if (player.gameObject instanceof Player && ropes.label === "rope" && this.ropeConstraint === undefined) {
+                    //Para permitir el salto de una cuerda a otra, 
+                    //evitaremos engancharnos a otros nodos de la cuerda que acabamos de soltar
+                    if (this._lastRopeId !== ropes.gameObject.id || this._canGrabLastRope) {
+                        this.ropeConstraint = this.matter.add.constraint(player,
+                            ropes,
+                            0,
+                            0.5 // rigidez de la unión
+                        );
+
+                        this._canGrabLastRope = false;
+                        this._lastRopeId = ropes.gameObject.id;
+                        this.player.changeHang(true);
+                    }
+                }
+            }
+
+            function getRootBody(body) {
+                if (body.parent === body) {
+                    return body;
+                }
+                while (body.parent !== body) {
+                    body = body.parent;
+                }
+                return body;
+            }
+        });
+    }
+
+    /**
+     * Libera al jugador de la restricción con la cuerda
+     */
+    freePlayer() {
+        this.matter.world.removeConstraint(this.ropeConstraint);
+        this.ropeConstraint = undefined;
+        setTimeout(this.canGrabRopeAgain, 100, this);
+    }
+
+    /**
+     * Cuando se llame a esta funcion, el jugador podra volver a agarrar la última cuerda que agarró
+     * @param {Phaser.Scene} self Referencia a this para acceder a la variable
+     */
+    canGrabRopeAgain(self) {
+        self._canGrabLastRope = true;
+    }
 }

@@ -13,13 +13,13 @@ let config = {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    pixelArt: false,
+    pixelArt: true,
     scene: [Boot, Title, Castle, End],
     physics: {
         default: 'matter',
         matter: {
             gravity: {
-                y: 2
+                y: .5
             },
             debug: false,
             runner: {
