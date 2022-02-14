@@ -22,14 +22,6 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
     this.lowJumpMultiplier = .01;
     this.isJumping = false;
 
-    // Coyote Time: podemos saltar en el aire un poco después de salirnos de una plataforma
-    this.coyoteTime = 100;
-    this.coyoteCounter = 0;
-
-    // Jump Buffer: podemos pulsar el botón de salto antes de tocar el suelo y saltar automáticamente en cuando lo toquemos
-    this.jumpBufferLength = 100;
-    this.jumpBufferCounter = 0;
-
     //Cajas
     this.pushSpeed = this.speed * .5;
     this.isPushing = false;
@@ -127,104 +119,49 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
   }
 
   /**
-   * Métodos preUpdate de Phaser. Se encarga del control del jugador
+   * Métodos preUpdate de Phaser. Se encarga del control del jugador cada frame
    * @override
    */
   preUpdate(t, dt) {
     super.preUpdate(t, dt);
 
-    //Controles
-    if (!this.hanged) {
-      this.horizontalMovement();
-      this.jumpPerformance(dt);
+    //Hacemos los controles
+    //Para saber si hemos pulsado los botones, podemos usar this.right(), this.left(), this.up(), this.down(), this.jump()
+    //Si pulsamos el boton de ir a la derecha, le decimos a que su velocidad sea this.speed con this.setVelocityX(numero);
+    //Podemos poner la animacion de andar con this.play('scottie_run', true);
+    //y la de estar quieto con this.play('scottie_idle', true);
 
-      if (this.isJumping && (this.isTouching.left || this.isTouching.right))
-        this.play("scottie_wall_slide", true);
-    } else
-      //Controles agarrado a una cuerda
-      this.swing();
 
-    //Solo 1 salto por pulsación
-    if (!this.jump() && this.jumpDown) {
-      //Soltamos el boton y por tanto se cancela la aplicación de velocidad ascendente
-      this.jumpDown = false;
-    }
-  }
+    //Con esto, nos daremos la vuelta si vamos a la izquierda
+    this.setFlipX(this.left());
 
-  /**
-   * Se encarga del movimiento horizontal del jugador. Actualiza su velocidad y animación en el eje X.
-   */
-  horizontalMovement() {
-    if (this.right() && !this.isTouching.right)
-      move(true, this);
-    else if (this.left() && !this.isTouching.left)
-      move(false, this);
-    else
-      stop(this);
-
-    /**
-     * Mueve al jugador horizontalmente. 
-     * Cambia la velocidad, empieza la animación y también invierte su sprite para orientarlo en la dirección correcta.
-     * @param {boolean} right true si se mueve a la derecha, false si se mueve a la izquierda
-     * @param {Player} self referencia al player
-     */
-    function move(right, self) {
-      let speed = self.isPushing ? self.pushSpeed : self.speed;
-      self.setVelocityX(right ? speed : -speed);
-      self.setFlipX(!right);
-      if (!self.isJumping)
-        self.play(self.isPushing ? 'scottie_push' : 'scottie_run', true);
-    }
-
-    /**
-     * Pone la velocidad a 0 y empieza la animación de idle
-     * @param {Player} self referencia al player
-     */
-    function stop(self) {
-      self.setVelocityX(0);
-      if (!self.isJumping)
-        self.play('scottie_idle', true);
-    }
-  }
-
-  /**
-   * Se encarga del movimiento vertical del jugador estandar, es decir, de cuando saltamos.
-   * @param {number} dt deltatime
-   */
-  jumpPerformance(dt) {
-    this.setIgnoreGravity(false);
-
-    if ((this.jump() && !this.jumpDown || this.jumpBufferCounter > 0) && this.coyoteCounter > 0 && !this.isJumping) {
-      this.jumpDown = true;
-      this.isJumping = true;
+    //El salto es un poco mas complicado. No solo tenemos que comprobar la tecla de salto, 
+    //sino también que no estemos saltando ya (lo podemos saber con this.isJumping)
+    //y que no hayamos saltado ya antes (lo podemos saber con this.jumpDown).
+    //Para preguntar que NO haya pasado esto ponemos ! al principio:
+    //Por ejemplo: si estoy saltando es "this.isJumping"
+    //si no estoy saltando es "!this.isJumping"
+    if ( false ) {
+      //Saltamos aplicando una fuerza hacia arriba
+      //Lo normal es que x sea 0 y la y sea this.jumpForce
       this.applyForce({
         x: 0,
-        y: this.jumpForce
+        y: 0
       });
       this.jumpSound.play();
 
-      //Si se ha saltado por el buffer, lo reseteamos
-      if (this.jumpBufferCounter > 0)
-        this.jumpBufferCounter = 0;
+      //Hemos saltado
+      this.jumpDown = true;
+      this.isJumping = true;
+
+      //Animacion de salto
+      this.play("scottie_jump", true);
     }
 
-    //Jump Buffer. Si ya estamos saltando, guardamos la pulsación en el buffer
-    else if (this.jump() && !this.jumpDown && this.isJumping && this.jumpBufferCounter <= 0)
-      this.jumpBufferCounter = this.jumpBufferLength;
-
-    if (this.isJumping && this.body.velocity.y < -0.1 && !this.jump())
-      this.applyForce({
-        x: 0,
-        y: this.lowJumpMultiplier
-      });
-
-    //Animación
-    if (this.isJumping && !this.isTouching.left && !this.isTouching.right)
-      this.play("scottie_jump", true);
-
-    //Timers
-    this.coyoteCounter -= dt;
-    this.jumpBufferCounter -= dt;
+    //Solo 1 salto por pulsación. Podeis borrarlo si quereis saltar muchas veces manteniendo pulsado
+    if (!this.jump() && this.jumpDown) {
+      this.jumpDown = false;
+    }
   }
 
   /**
@@ -347,35 +284,5 @@ export default class Player extends Phaser.Physics.Matter.Sprite {
     this.isTouching.left = false;
     this.isTouching.right = false;
     this.isTouching.ground = false;
-  }
-
-  /**
-   * Balancea al jugador a los lados cuando está agarrado en una cuerda, y lo suelta si pulsamos jump.
-   */
-   swing() {
-    if (this.jump() && !this.jumpDown) {
-      //Se suelta de la cuerda
-      this.hanged = false;
-      this.scene.freePlayer();
-    } else if (this.left())
-      this.applyForce({
-        x: -this.ropeForce,
-        y: 0
-      });
-    else if (this.right())
-      this.applyForce({
-        x: this.ropeForce,
-        y: 0
-      });
-
-    this.play("scottie_hang", true);
-  }
-
-  /**
-   * Suelta o agarra el jugador a una cuerda
-   * @param {boolean} hanged true si el jugador se ha agarrado a una cuerda o false si se ha soltado
-   */
-  changeHang(hanged) {
-    this.hanged = hanged;
   }
 }

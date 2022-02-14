@@ -29,12 +29,15 @@ export default class Castle extends Phaser.Scene {
         //Construimos el mapa
         this.construirMapa();
 
-        //Personajes
-        this.player = new Player(this, 400, 800);
+        //Creamos el jugador
+        //Tenemos que decirle que el jugador de la escena es un new Player
+        //(this.player = new Player(this, x, y))
+        //Podemos empezar donde queramos, pero recomiendo empezar en (400, 800)
 
         //Camara
         this.cameras.main.setBounds(0, 0, 1920, 960);
-        this.cameras.main.startFollow(this.player);
+        //Ahora le tenemos que decir a this.cameras.main que
+        //empiece a seguir al jugador con .startFollow(this.player)
 
         //Agarrarse a la cuerda
         this.ropeConstraint = undefined;
@@ -53,11 +56,8 @@ export default class Castle extends Phaser.Scene {
     update(t, dt) {
         super.update(t, dt);
 
-        //Si tenemos todas las monedas, terminamos el juego
-        if (this.monedas === this.monedasTotales){
-            this.music.stop();
-            this.scene.start("end");
-        }
+        //Si tenemos todas las monedas, terminamos el juego cambiando a la escena "end"
+        //¿Recuerdas cómo se cambia de escena?
     }
 
     cogerMoneda() {

@@ -30,7 +30,8 @@ let config = {
     }
 };
 
-let game = new Phaser.Game(config);
+//¡Crear el juego con la configuración que hemos puesto arriba!
+//Podemos decirlo con "let game = new Phaser.Game(config);"
 
 game.audioConfig = {
     mute: false,

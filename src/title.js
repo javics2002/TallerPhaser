@@ -9,19 +9,25 @@ export default class Title extends Phaser.Scene {
     let width = this.cameras.main.width;
     let height = this.cameras.main.height;
 
-    //Imagen de fondo
-    this.add.image(0, 0, 'title').setOrigin(0, 0);
+    //Añadimos una imagen de fondo
+    //Hay que decirle en qué posición, y qué imagen, usando this.add
+    //this.add.image(x, y, "nombre de la imagen")
+    //Podemos probar ahora poniendo la imagen "title" en la posicion (0, 0)
+    //Para centrarla, tenemos que decirle despues .setOrigin(0, 0)
 
-    //Texto del título
-    this.write(width * .15, height * .3, "MY GAME");
+    //Añadimos el titulo de nuestro juego
+    //Podemos usar this.add.text(x, y, "titulo de tu maravilloso primer juego")
 
-    //Botón de PLAY
-    let playButton = this.write(width * .15, height * .6, 'PLAY ').setInteractive();
+    //Añadimos el botón de PLAY
+    //Lo hacemos igual que el texto, pero tenemos que decirle que sea interactivo con .setInteractive()
+    //Así se convierte en botón, y nosotros le decimos lo que tiene que hacer cuando lo pulsemos:
+    let playButton = 
+    //Aqui le decimos que cargue la escena castle cuando pulsemos en playButton
     playButton.on('pointerdown', () => {
       this.scene.start('castle');
     });
 
-    //Fullscreen
+    //Botón de pantalla completa
     let fullscreenButtonTexture = this.scale.isFullscreen ? 'exit_fullscreen' : 'enter_fullscreen';
     this.addInteractiveImage(width - 90, height - 50, fullscreenButtonTexture, function () {
       if (this.scene.scale.isFullscreen) {
@@ -34,21 +40,6 @@ export default class Title extends Phaser.Scene {
         enterFullScreen();
       }
     });
-  }
-
-  /**
-   * Escribe en la pantalla el texto dado en la posición (x, y)
-   * @param {integer} x Posición en la pantalla en el eje X (punto izquierdo central)
-   * @param {integer} y Posición en la pantalla en el eje Y (punto izquierdo central)
-   * @param {string} text Texto a escribir
-   * @returns 
-   */
-  write(x, y, text) {
-    let textElement = this.add.text(x, y, text);
-    textElement.setOrigin(0, 0.5);
-    textElement.setFontSize(50);
-    textElement.setShadow(2, 2, "#333333", 2, false, true);
-    return textElement;
   }
 
   /**
